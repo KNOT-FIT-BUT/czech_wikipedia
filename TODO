@@ -1,0 +1,9 @@
+!- use better paragraph and sentence extraction patterns
+!- remove empty sections (two headings right after each other, e.g. in Eugen Wuster)
+!- remove sections Odkazy, Reference, Slovníky?
+!- some titles begin with period or other dumb chars. This renders them hidden on Linux. Do some replacing in file naming in fulltexts/ directory
+
+- implement time measurements
+- tweak logging and output of WikiExtractor.py
+- add verbosity option to xfrune_extractor
+
