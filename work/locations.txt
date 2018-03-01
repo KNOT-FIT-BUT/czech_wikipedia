@@ -1,0 +1,14 @@
+# Servers, directories, files used in this project
+# Can be run through bash to set/load following variables:
+
+# Storage server:
+MINERVA1=minerva1.fit.vutbr.cz
+
+# Processing server:
+ATHENA1=athena1.fit.vutbr.cz
+
+# Project directory (on minerva1):
+PROJ_DIR="/mnt/minerva1/nlp/projects/czech_wikipedia"
+
+# Temp directory for processing (on athena1):
+TEST_DIR="/tmp/czech_wikipedia_testing"

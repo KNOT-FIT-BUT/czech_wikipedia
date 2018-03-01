@@ -1,4 +1,8 @@
-preprocessed_dump
-results
+# Ignore hidden files (beginning with '.'), even in directories, except the .gitignore of course
+*/.*
+.*
+!.gitignore
+
+preprocessed_dump_*
+results_*
 cswiki-latest-pages-articles.xml
-template-defs.tmpl

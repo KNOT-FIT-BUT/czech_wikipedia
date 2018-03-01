@@ -1,0 +1,22 @@
+
+===> HIGH PRIORITY (missing functionality, bugs):
+
+> handle Disambiguations and Redirections
+	- Redirecitons seem to be removed by WikiExtractor -> verify
+> see GMAIL for all mistakes and "glitches"
+> remove empty sections (two headings right after each other, e.g. in Eugen Wuster)
+> remove sections Odkazy, Reference, Slovníky?
+
+===> MEDIUM PRIORITY (completeness):
+
+> some titles begin with period or other dumb chars. This renders them hidden on Linux. Do some replacing in file naming in fulltexts/ directory
+> use better paragraph and sentence extraction patterns
+
+
+
+===> LOW PRIORITY (maybe in the future, not necessary):
+
+> implement benchmark
+> tweak logging and output of WikiExtractor.py
+> add verbosity option
+

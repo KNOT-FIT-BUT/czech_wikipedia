@@ -2,26 +2,11 @@
  
 #########################################################################################################################################
 ###
-### Script for extracting sentences, paragraphs and full texts or generating a knowledgebase 
+### Script for extracting sentences, paragraphs and full texts or generating knowledgebase 
 ###from intermediary dump created usign WikiExtractor.py https://github.com/attardi/wikiextractor.
 ### Usage:
-### Run: 
-### 'WikiExtractor.py --templates <templatefile> -ns Soubor --html --output <predump> <wikidumpfile.xml>'
-### on the desired wikidump, and then run this script, with option 
-### '--dumpdir' set to the <predump> passed to WikiExtractor prior, like:
-### 'czechwiki_extractor.py --outputdir <results> --datadir <preprocesseddump_dir> [-s] [-p] [-f] [--kb]'
+### See README.md for instructions on extraction
 #########################################################################################################################################
-###
-### Version informations:
-### v1.0:
-### ---> working version which produces reasonable output
-### ---> for output format see project wikipedia page: https://knot.fit.vutbr.cz/wiki/index.php/Czech_wikipedia
-###
-#########################################################################################################################################
-
-
-# version info displayed in help:
-PROGRAM_VERSION_INFO = 'czech_wikiextractor.py v1.0.' 
 
 
 import pdb
@@ -239,9 +224,7 @@ def main(argList:list = None) -> None:
 	can pass custom, modified list of arguments"""
 
 	argParser = argparse.ArgumentParser(description="""Script for extracting first sentences, first paragraphs, full texts or 
-													generating knowledgebase for wikipages from predump by WikiExtractor.py.
-													Version info: {}
-													See czechwiki_extractor.version for changes and details.""".format(PROGRAM_VERSION_INFO), 
+													generating knowledgebase for wikipages from predump by WikiExtractor.py.""",
 										epilog="""Using all extract options (-s, -p, -f, --kb) at once 
 												is the most efficient way to extract the data, because once read, all the data are processed anyway.
 												These flags just decide whether the data are written to the result files.""")
