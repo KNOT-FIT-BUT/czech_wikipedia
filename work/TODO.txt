@@ -1,6 +1,10 @@
 
 ===> HIGH PRIORITY (missing functionality, bugs):
 
+1) do extraction with disambig removed
+2) do phase 2 extraction on the new preprocessed dump
+3) continue:
+
 > handle Disambiguations and Redirections
 	- Redirecitons seem to be removed by WikiExtractor -> verify
 > see GMAIL for all mistakes and "glitches"

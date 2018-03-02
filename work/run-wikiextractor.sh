@@ -7,7 +7,7 @@ if [ "$PWD" = "*/work" ] ; then cd .. ; fi
 
 # Modify inputs and outputs here:
 STARTTIME="`date +%d-%m-%Y--%H:%M`" 
-INPUT="cswiki-latest-pages-articles.xml"
+INPUT="cs-wiki-latest-pages-articles.xml"
 OUTPUTDIR="preprocessed_dump_$STARTTIME"
 TEMPLATES="template_definitions_$STARTTIME"
 
