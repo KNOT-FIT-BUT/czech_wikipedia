@@ -3,14 +3,14 @@
 #### Složka projektu:
   */mnt/minerva1/nlp/projects/czech_wikipedia*
 #### Github:
-    *https://github.com/KNOT-FIT-BUT/czech_wikipedia*
+  *https://github.com/KNOT-FIT-BUT/czech_wikipedia*
 
 #### Soubory:
-	* **wikiextractor/** - obsahuje _WikiExtractor.py_ (https://github.com/attardi/wikiextractor), který se používá při první fázi extrakce dat z wikidumpu (viz Postup extrakce dat)
-					   * **czechwiki_extractor.py** - vlastní skript, který extrahuje data z předzpracovaného dumpu od *WikiExtractor.py*.
-					   * **cs-wiki-latest-pages-articles_link.xml** - symlink na český wikidump: /mnt/minerva1/nlp/corpora_datasets/monolingual/czech/wikipedia/cswiki-latest-pages-articles.xml.
-					   * **preprocessed_dump_<DATETIME>**, **results_<DATETIME>** - soubory generované při extrakci dat z dumpu. Adresář *results_<DATETIME>* obsahuje konečné výsledné soubory extrakce.
-					   * **work** - složka s poznámkami a BASH skripty pro urychlení práce.
+* **wikiextractor/** - obsahuje _WikiExtractor.py_ (https://github.com/attardi/wikiextractor), který se používá při první fázi extrakce dat z wikidumpu (viz Postup extrakce dat)
+* **czechwiki_extractor.py** - vlastní skript, který extrahuje data z předzpracovaného dumpu od *WikiExtractor.py*.
+* **cs-wiki-latest-pages-articles_link.xml** - symlink na český wikidump: /mnt/minerva1/nlp/corpora_datasets/monolingual/czech/wikipedia/cswiki-latest-pages-articles.xml.
+* **preprocessed_dump_<DATETIME>**, **results_<DATETIME>** - soubory generované při extrakci dat z dumpu. Adresář *results_<DATETIME>* obsahuje konečné výsledné soubory extrakce.
+* **work** - složka s poznámkami a BASH skripty pro urychlení práce.
 ## Postup extrakce dat
 
 1) Spustit **wikiextractor/WikiExtractor.py --templates --filter_disambig_pages <templatefile> -ns Soubor --html --output <outputdir> <wikidumpfile.xml>**, kde:
@@ -48,11 +48,11 @@ Současné řešení nechá WikiExtractor předzpracovat wikidump do jednoduše 
 Výsledky jsou ve složce:
     /mnt/minerva1/nlp/projects/czech_wikipedia/results
 
-	Soubory:
-	* sentences.txt - každý řádek obsahuje URI a první větu jednoho článku.
-	* paragraphs.txt - každý řádek obsahuje URI a první odstavec jednoho článku. 
-	* fulltexts/ - složka obsahující soubor pro každý článek wikipedie. Soubor obsahuje celý text článku včetně nadpisů sekcí.
-	* knowledgebase.txt - každý řádek obsahuje: Název, URI, ID, první odstavec a seznam souborů (obrázků, ...). Položky jsou ooděleny tabulátorem, jednotlivé odkazy na soubory jsou odděleny znakem '|'.
+Soubory:
+* sentences.txt - každý řádek obsahuje URI a první větu jednoho článku.
+* paragraphs.txt - každý řádek obsahuje URI a první odstavec jednoho článku. 
+* fulltexts/ - složka obsahující soubor pro každý článek wikipedie. Soubor obsahuje celý text článku včetně nadpisů sekcí.
+* knowledgebase.txt - každý řádek obsahuje: Název, URI, ID, první odstavec a seznam souborů (obrázků, ...). Položky jsou ooděleny tabulátorem, jednotlivé odkazy na soubory jsou odděleny znakem '|'.
 
 ### Testování 
 Testování proběhlo na serveru athena1.
