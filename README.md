@@ -33,6 +33,7 @@
 
 Nejefektivnější je spustit czechwiki_extractor.py se všemi parametry zároveň (-s -p -f --kb). Kvůli zjednodušení skriptu se stejně extrahují všechna data zároveň téměř kompletně, tyto flagy pouze rozhodují o tom, zda se zapíší výsledky do souborů.
 
+Oblasti změn v kódu WikiExtractor.py jsou ohraničené komentáři ### MODIFY_START - ### MODIFY_END.
 ## Minulá řešení
 
 Projekty pro extrakci vět, odstavců a celých textů již byly v minulosti řešeny:
