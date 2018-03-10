@@ -82,10 +82,16 @@ def perform_extraction(dumpdir:str, outputdir:str, extract_sentences:bool, extra
 					if extract_paragraphs:
 						paragraphs_file.write(page_uri + '\t' + page_first_paragraph + '\n')
 
-					if extract_fulltexts:
-						# make a file with filename == article title (some titles contain character '/', forbidden in filenames -
-						# replace '/' char with url's '%2F'):
-						temp_fulltext_file = open(os.path.join(fulltexts_dir, re.sub(r'/', r'%2F', page_title) + '.txt'), "w")
+					
+					if extract_fulltexts: 
+						# replace '/' in the #title with %2F - its URL escape - because '/' is forbidden in filenames
+						escaped_page_title = re.sub(r'/', r'%2F', page_title) 
+						temp_filename = "wp_" + escaped_page_title # filename: wp_ (as wikipage) + page title
+						temp_dir = os.path.join(fulltexts_dir, "d_" + escaped_page_title[0:2]) # dirname - use first two letters of the page title
+						if not os.path.exists(temp_dir):
+							os.makedirs(temp_dir)
+
+						temp_fulltext_file = open(os.path.join(temp_dir, temp_filename + '.txt'), "w")
 						temp_fulltext_file.write(page_fulltext) 
 						temp_fulltext_file.close()
 				
@@ -192,7 +198,7 @@ def extract_page_info(doc_text:str) -> (str, str, str, str, str, str, list):
 
 	# replace headings with respective number of '='
 	for n in range(1, 7):
-		page_fulltext = re.sub('</?h{}>'.format(n), '='*n, page_fulltext)
+		page_fulltext = re.sub('</?h{}>'.format(n), ' ' + '='*n + ' ', page_fulltext)
 	
 	# make <br> into newlines
 	page_fulltext = page_fulltext.replace('<br>', '\n')
@@ -211,7 +217,7 @@ def extract_page_info(doc_text:str) -> (str, str, str, str, str, str, list):
 
 
 	# remove all remainign html tags	
-	#page_fulltext = re.sub(r'</?[\w]+>', r'', page_fulltext)
+	page_fulltext = re.sub(r'</?[\w]+>', r'', page_fulltext)
 	
 	# collapse multiple newlines into one newline (<=> delete empty lines)
 	page_fulltext = re.sub(r'\n+', r'\n', page_fulltext)

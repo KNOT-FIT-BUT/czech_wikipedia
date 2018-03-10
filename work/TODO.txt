@@ -6,7 +6,7 @@
 2) do phase 2 extraction on the new preprocessed dump
 3) continue:
 
--- format HTML tags in fulltexts
+-- sentence matching fails at e.g. titles: "Mgr. Jaroslav" is split by the '.' as sentence !!!
 -- WikiExtractor removes Disambiguations (now fixed) and REDIRECTS
 -- Math formulas expand into strings 'formula_XX' - ???
 -- remove: Odkazy, Literatura, Externi odkazy, Souvisejici clanky, ...

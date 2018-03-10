@@ -51,7 +51,7 @@ Výsledky jsou ve složce:
 Soubory:
 * sentences.txt - každý řádek obsahuje URI a první větu jednoho článku.
 * paragraphs.txt - každý řádek obsahuje URI a první odstavec jednoho článku. 
-* fulltexts/ - složka obsahující soubor pro každý článek wikipedie. Soubor obsahuje celý text článku včetně nadpisů sekcí.
+* fulltexts/ - složka obsahující soubory pro každý článek wikipedie pojmenovaný "wp_pagetitle" (jako "wiki page"). Soubor obsahuje celý text článku včetně nadpisů sekcí. Soubory jsou roztříděné do složek "d_LL", kde "LL" jsou první dvě písmena titulu wiki článku.
 * knowledgebase.txt - každý řádek obsahuje: Název, URI, ID, první odstavec a seznam souborů (obrázků, ...). Položky jsou ooděleny tabulátorem, jednotlivé odkazy na soubory jsou odděleny znakem '|'.
 
 ### Testování 
