@@ -1,19 +1,21 @@
 
 ===> HIGH PRIORITY (missing functionality, bugs):
 
+
 1) do extraction with disambig removed
 2) do phase 2 extraction on the new preprocessed dump
 3) continue:
 
+-- format HTML tags in fulltexts
 -- WikiExtractor removes Disambiguations (now fixed) and REDIRECTS
+-- Math formulas expand into strings 'formula_XX' - ???
+-- remove: Odkazy, Literatura, Externi odkazy, Souvisejici clanky, ...
+-- remove empty sections
 
-
-> handle Disambiguations and Redirections
-> see GMAIL for all mistakes and "glitches"
-> remove empty sections (two headings right after each other, e.g. in Eugen Wuster)
-> remove sections Odkazy, Reference, Slovníky?
 
 ===> MEDIUM PRIORITY (completeness):
+
+> spread fulltext fiiles into directories
 
 > some titles begin with period or other dumb chars. This renders them hidden on Linux. Do some replacing in file naming in fulltexts/ directory
 > use better paragraph and sentence extraction patterns

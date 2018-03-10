@@ -188,16 +188,31 @@ def extract_page_info(doc_text:str) -> (str, str, str, str, str, str, list):
 
 
 	## 2) For full texts:
+	# Apply some formatting:
 
 	# replace headings with respective number of '='
-	#for n in range(1, 7):
-	#		page_fulltext = re.sub('</?h{}>'.format(n), '='*n, page_fulltext)
+	for n in range(1, 7):
+		page_fulltext = re.sub('</?h{}>'.format(n), '='*n, page_fulltext)
 	
+	# make <br> into newlines
+	page_fulltext = page_fulltext.replace('<br>', '\n')
+
+	# recreate ordered and unordered lists into simple lists with "* " at each item:
+	page_fulltext = re.sub(r'</?[ou]l>', r'', page_fulltext)
+	page_fulltext = re.sub(r'<li>', r'* ', page_fulltext)
+	page_fulltext = re.sub(r'</li>', r'', page_fulltext)
+
+	# recreate description lists with "* " at items, " `-> " at descriptions:
+	page_fulltext = re.sub(r'</?dl>', r'', page_fulltext)
+	page_fulltext = re.sub(r'<dt>', r'* ', page_fulltext)
+	page_fulltext = re.sub(r'<dd>', r" `-> ", page_fulltext)
+	page_fulltext = re.sub(r'</d[td]>', r'', page_fulltext)
+
+
+
 	# remove all remainign html tags	
 	#page_fulltext = re.sub(r'</?[\w]+>', r'', page_fulltext)
 	
-	### TODO - formatting of the fulltext and html tags
-
 	# collapse multiple newlines into one newline (<=> delete empty lines)
 	page_fulltext = re.sub(r'\n+', r'\n', page_fulltext)
 	# remove ending and trailing if there are any
