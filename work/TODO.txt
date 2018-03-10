@@ -5,8 +5,10 @@
 2) do phase 2 extraction on the new preprocessed dump
 3) continue:
 
+-- WikiExtractor removes Disambiguations (now fixed) and REDIRECTS
+
+
 > handle Disambiguations and Redirections
-	- Redirecitons seem to be removed by WikiExtractor -> verify
 > see GMAIL for all mistakes and "glitches"
 > remove empty sections (two headings right after each other, e.g. in Eugen Wuster)
 > remove sections Odkazy, Reference, Slovníky?

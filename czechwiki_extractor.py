@@ -3,7 +3,7 @@
 #########################################################################################################################################
 ###
 ### Script for extracting sentences, paragraphs and full texts or generating knowledgebase 
-###from intermediary dump created usign WikiExtractor.py https://github.com/attardi/wikiextractor.
+### from intermediary dump created usign WikiExtractor.py https://github.com/attardi/wikiextractor.
 ### Usage:
 ### See README.md for instructions on extraction
 #########################################################################################################################################
@@ -24,7 +24,7 @@ from types import SimpleNamespace
 def perform_extraction(dumpdir:str, outputdir:str, extract_sentences:bool, extract_paragraphs:bool, extract_fulltexts:bool, generate_knowledgebase:bool, logger:logging.Logger) -> None:
 	"""Entry point for performing extraction from WikiExtractor HTML intermediary dump"""
 
-	if extract_sentences:
+	if extract_sentences: # overwrite or create files / dirs
 		sentences_file = open(os.path.join(outputdir, "sentences.txt"), "w")
 	if extract_paragraphs:
 		paragraphs_file = open(os.path.join(outputdir, "paragraphs.txt"), "w")
@@ -84,9 +84,9 @@ def perform_extraction(dumpdir:str, outputdir:str, extract_sentences:bool, extra
 
 					if extract_fulltexts:
 						# make a file with filename == article title (some titles contain character '/', forbidden in filenames -
-						# replace '/' char with '_backslash_'):
-						temp_fulltext_file = open(os.path.join(fulltexts_dir, re.sub(r'/', r'_backslash_', page_title) + '.txt'), "w")
-						temp_fulltext_file.write("={}=\n{}".format(page_title,page_fulltext)) #add <h1> heading - it makes sense when extracting whole text
+						# replace '/' char with url's '%2F'):
+						temp_fulltext_file = open(os.path.join(fulltexts_dir, re.sub(r'/', r'%2F', page_title) + '.txt'), "w")
+						temp_fulltext_file.write(page_fulltext) 
 						temp_fulltext_file.close()
 				
 					if generate_knowledgebase:
@@ -133,70 +133,75 @@ def extract_page_info(doc_text:str) -> (str, str, str, str, str, str, list):
 	page_file_uris = []
 
 	
-#html.entities.html5['amp;nbsp'] = ' '
-
 	doc_text = html.unescape(doc_text)
-	# A little counter-bug - input html contains '&amp;nbsp' instead of '&nbsp', so 
+	# A little bug-counter - input html contains '&amp;nbsp' instead of '&nbsp', so 
 	# after the first html.unescape() strings '&nbsp' are left in the text (and maybe this goes for more html entities)
 	doc_text = html.unescape(doc_text)
+
+
+	# extract Files (images etc.):
+	page_file_uris = re.findall(r'<a href="Soubor%3A([^"]+)">.*?</a>', doc_text)
+	doc_text = re.sub(r'<a href="Soubor%3A([^"]+)">.*?</a>', r'', doc_text)
+
 
 	# extract title, uri and id:
 	pattern_header = re.compile(r'<doc\s+id="(\d+)"\s+url="([^"]+)"\s+title="(.+?)">')
 	page_id, page_uri, page_title = pattern_header.findall(doc_text)[0] 
 	# URI contains ID, not the title - replace that (in title spaces must be replaced with '_' for this)
 	page_uri = re.sub(r'\?.+', r'/{}'.format(re.sub(r' ', r'_', page_title)), page_uri, 1)
-
-	# Strip html tags - convert into plaintext:
-
-	doc_text = re.sub(r'</?doc.*?>', r'', doc_text) # remove opening and ending <doc> elements
-	doc_text = re.sub(r'<h1>.*?</h1>', r'', doc_text) # remove h1 headings - don't need, it's already in the 'title'
 	
-
-	for n in range(2, 7): # replace tags <h2> - <h6> with respective number of '='
-		doc_text = re.sub('</?h{}>'.format(n), '='*n, doc_text)
-	
-	# extract Files (images etc.):
-	page_file_uris = re.findall(r'<a href="Soubor%3A([^"]+)">.*?</a>', doc_text)
-	doc_text = re.sub(r'<a href="Soubor%3A([^"]+)">.*?</a>', r'', doc_text)
+	# remove opening and ending <doc> elements
+	doc_text = re.sub(r'</?doc.*?>', r'', doc_text) 
 
 	# replace links with their plain text representation
 	doc_text = re.sub(r'<a href="[^"]+">([^<]+)</a>', r'\1', doc_text)
+
+	# make file uris complete:
+	for i in range(len(page_file_uris)):
+		page_file_uris[i] = "cs.wikipedia.org/wiki/{}#/media/File:{}".format(re.sub(r' ', r'_', page_title), re.sub(r'%20', r'_', page_file_uris[i]))
+
+	# Make copy of the doctext (extraction for fulltext and for sentences, paragraphs, knowledgebase is a little differect)
+	page_fulltext = doc_text
+
+
+	## 1) For paragraphs, sentences, knowledgebase:
+	
+	# remove all headings
+	doc_text = re.sub(r'<h\d>.*?</h\d>', r'', doc_text) 
 	
 	# remove all remainign html tags	
 	doc_text = re.sub(r'</?[\w]+>', r'', doc_text)
-	
+
 	# collapse multiple newlines into one newline (<=> delete empty lines)
 	doc_text = re.sub(r'\n+', r'\n', doc_text)
 	# remove ending and trailing if there are any
 	doc_text = doc_text.strip()
 
-
-	# parsing complete, extract parts:
-	page_fulltext = doc_text
-	
-	# here making assumptions about the output format - each paragraph is on a separate line. This includes headings, so paragraph is
-	# something that ends with a period, ? or !, and is followed by newline. For standard texts this works, for specially formated
-	# pages (redirections, disambiguations, ...) this should extract the whole text. 
-	# FIXME maybe upgrade to something more... professional? 
-	page_first_paragraph = re.split(r'\n(?<=[.?!]\n)', page_fulltext)[0]
-	
-
-	#####
-	##### TODO Make NLTK work. Add czech abbreviations, look to the previous project - nltk seemed to be working there.
-	#####
-	# Use nltk to split the paragraph into sentences, take the first one.
-	# If the paragrap is empty string, Index out of range Exception occurs.
-	#try:
-	#	page_first_sentence = nltk.sent_tokenize(page_first_paragraph)[0]
-	#except:
-	#	page_first_sentence = ''
+	# Extract first paragraph (this makes assumptions about the input format - 
+	# each paragraph seems to be on a separate line)
+	split_paragraphs = doc_text.split("\n")
+	page_first_paragraph = split_paragraphs[0] if len(split_paragraphs) >= 1 else ""
 
 	# Old, but kind of working solution to sentence extraction.
+	# re.split returns array with empty string if the paragraph is empty string:
 	page_first_sentence = re.split(r'\s+(?<=[.?!]\s)(?![a-zěščřžýáíéúůďťň])', page_first_paragraph)[0]
 
-	# make file uris complete:
-	for i in range(len(page_file_uris)):
-		page_file_uris[i] = "cs.wikipedia.org/wiki/{}#/media/File:{}".format(page_title, re.sub(r'%20', r'_', page_file_uris[i]))
+
+	## 2) For full texts:
+
+	# replace headings with respective number of '='
+	#for n in range(1, 7):
+	#		page_fulltext = re.sub('</?h{}>'.format(n), '='*n, page_fulltext)
+	
+	# remove all remainign html tags	
+	#page_fulltext = re.sub(r'</?[\w]+>', r'', page_fulltext)
+	
+	### TODO - formatting of the fulltext and html tags
+
+	# collapse multiple newlines into one newline (<=> delete empty lines)
+	page_fulltext = re.sub(r'\n+', r'\n', page_fulltext)
+	# remove ending and trailing if there are any
+	page_fulltext = page_fulltext.strip()
 
 
 	return (page_title, page_uri, page_id, page_first_sentence, page_first_paragraph, page_fulltext, page_file_uris)
