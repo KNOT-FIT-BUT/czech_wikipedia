@@ -16,6 +16,7 @@ import re
 import os.path
 import html
 import logging
+
 import nltk
 from types import SimpleNamespace
 
@@ -23,6 +24,22 @@ from types import SimpleNamespace
 
 def perform_extraction(dumpdir:str, outputdir:str, extract_sentences:bool, extract_paragraphs:bool, extract_fulltexts:bool, generate_knowledgebase:bool, logger:logging.Logger) -> None:
 	"""Entry point for performing extraction from WikiExtractor HTML intermediary dump"""
+
+
+	# NLTK initialization:
+	# (taken from previous project solution)
+	sent_tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
+	# add in abbreviations:
+	for line in open("abbreviation_added_to_nltk.txt"):
+		sent_tokenizer._params.abbrev_types.add(line.strip())
+	for line in open("czech_abbreviations.txt"):
+		sent_tokenizer._params.abbrev_types.add(line.strip())
+
+
+		sent_tokenizer._params.abbrev_types.add("mgr")
+
+
+
 
 	if extract_sentences: # overwrite or create files / dirs
 		sentences_file = open(os.path.join(outputdir, "sentences.txt"), "w")
@@ -67,7 +84,7 @@ def perform_extraction(dumpdir:str, outputdir:str, extract_sentences:bool, extra
 					# reading separate lines and then str.join() is faster than gradual concatenation)
 					doc_text = "\n".join(doc_lines)
 					# Html text of wiki page (from <doc ...> to </doc>) is in doc_text. Now convert into plain text and extract info
-					page_title, page_uri, page_id, page_first_sentence, page_first_paragraph, page_fulltext, file_uris = extract_page_info(doc_text)  
+					page_title, page_uri, page_id, page_first_sentence, page_first_paragraph, page_fulltext, file_uris = extract_page_info(doc_text, sent_tokenizer)  
 					
 					# because of the simplistic paragraph and sentence extraction patterns, some special wikipages produce
 					# paragraphs or sentences with a newline - get rid of those for now - replace them with spaces
@@ -124,10 +141,11 @@ def perform_extraction(dumpdir:str, outputdir:str, extract_sentences:bool, extra
 
 
 
-def extract_page_info(doc_text:str) -> (str, str, str, str, str, str, list):
+def extract_page_info(doc_text:str, sent_tokenizer) -> (str, str, str, str, str, str, list):
 	"""Extract following information from HTML preprocesssed wikipage as tuple with this order:
 		(title, uri, id, first sentence, first paragraph, full text, list of file uris in the wikipage).
-		 This method is called inside perfom_extraction method for each wikipage html it reads from the preprocessed dump."""
+		 This method is called inside perfom_extraction method for each wikipage html it reads from the preprocessed dump.
+		 Uses the argument sent_tokenizer to extract first sentence from a paragraph."""
 
 
 	page_title = ''
@@ -190,7 +208,14 @@ def extract_page_info(doc_text:str) -> (str, str, str, str, str, str, list):
 
 	# Old, but kind of working solution to sentence extraction.
 	# re.split returns array with empty string if the paragraph is empty string:
-	page_first_sentence = re.split(r'\s+(?<=[.?!]\s)(?![a-zěščřžýáíéúůďťň])', page_first_paragraph)[0]
+	# page_first_sentence = re.split(r'\s+(?<=[.?!]\s)(?![a-zěščřžýáíéúůďťň])', page_first_paragraph)[0]
+
+	# Extract first sentence form paragraph using NLTK:
+	tmp_sentences = sent_tokenizer.tokenize(page_first_paragraph)
+	if len(tmp_sentences) > 0 :
+		page_first_sentence = tmp_sentences[0]
+	else: 
+		page_first_sentence = page_first_paragraph
 
 
 	## 2) For full texts:
@@ -213,7 +238,6 @@ def extract_page_info(doc_text:str) -> (str, str, str, str, str, str, list):
 	page_fulltext = re.sub(r'<dt>', r'* ', page_fulltext)
 	page_fulltext = re.sub(r'<dd>', r" `-> ", page_fulltext)
 	page_fulltext = re.sub(r'</d[td]>', r'', page_fulltext)
-
 
 
 	# remove all remainign html tags	

@@ -2,24 +2,21 @@
 ===> HIGH PRIORITY (missing functionality, bugs):
 
 
-1) do extraction with disambig removed
+# DONE 1) do extraction with disambig removed
 2) do phase 2 extraction on the new preprocessed dump
 3) continue:
 
--- sentence matching fails at e.g. titles: "Mgr. Jaroslav" is split by the '.' as sentence !!!
 -- WikiExtractor removes Disambiguations (now fixed) and REDIRECTS
 -- Math formulas expand into strings 'formula_XX' - ???
--- remove: Odkazy, Literatura, Externi odkazy, Souvisejici clanky, ...
--- remove empty sections
+-- ? remove: Odkazy, Literatura, Externi odkazy, Souvisejici clanky, ...
+-- ? remove empty sections
 
 
 ===> MEDIUM PRIORITY (completeness):
 
-> spread fulltext fiiles into directories
+# DONE > spread fulltext fiiles into directories
 
-> some titles begin with period or other dumb chars. This renders them hidden on Linux. Do some replacing in file naming in fulltexts/ directory
-> use better paragraph and sentence extraction patterns
-
+# DONE > some titles begin with period or other dumb chars. This renders them hidden on Linux. Do some replacing in file naming in fulltexts/ directory
 
 
 ===> LOW PRIORITY (maybe in the future, not necessary):
