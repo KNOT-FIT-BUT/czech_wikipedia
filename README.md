@@ -36,7 +36,7 @@ Nejefektivnější je spustit czechwiki_extractor.py se všemi parametry zárove
 
 Oblasti změn v kódu WikiExtractor.py jsou ohraničené komentáři ### MODIFY_START - ### MODIFY_END.
 
-Extrakce odstavců a vět nefunguje 100 % správně, formáty některých wikičlánků nebo větné konstrukce extraktor nezvládá. Úspěšnost extrakce je odhadem 97 %.
+Extrakce odstavců a vět nefunguje 100 % správně, formáty některých wikičlánků nebo větné konstrukce extraktor nezvládá. Úspěšnost extrakce je odhadem 95 %.
 ## Minulá řešení
 
 Projekty pro extrakci vět, odstavců a celých textů již byly v minulosti řešeny:
