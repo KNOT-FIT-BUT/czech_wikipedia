@@ -2,14 +2,21 @@
 ===> HIGH PRIORITY (missing functionality, bugs):
 
 
-# DONE 1) do extraction with disambig removed
-2) do phase 2 extraction on the new preprocessed dump
-3) continue:
+# DONE --> perform preprocessing (wikiextractor) with disambiguations removed
+# DONE --> Use UDPipe REST API
 
--- WikiExtractor removes Disambiguations (now fixed) and REDIRECTS
--- Math formulas expand into strings 'formula_XX' - ???
--- ? remove: Odkazy, Literatura, Externi odkazy, Souvisejici clanky, ...
--- ? remove empty sections
+--> Use local lib or exe UDPipe (REST API is ridiculously slow)
+
+--> Remove articles "Seznamy *" (recognized by "[[Kategorie:Seznamy *]" at the end in wikidump)
+
+
+
+
+
+- WikiExtractor removes Disambiguations (now fixed) and REDIRECTS
+- Math formulas expand into strings 'formula_XX' - ???
+- ? remove: Odkazy, Literatura, Externi odkazy, Souvisejici clanky, ...
+- ? remove empty sections
 
 
 ===> MEDIUM PRIORITY (completeness):

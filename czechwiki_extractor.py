@@ -9,7 +9,6 @@
 #########################################################################################################################################
 
 
-import pdb
 import sys
 import argparse
 import re
@@ -17,8 +16,27 @@ import os.path
 import html
 import logging
 
-import nltk
 from types import SimpleNamespace
+
+import requests
+from ufal.udpipe import Model, Pipeline, ProcessingError
+
+
+def extract_sentence(paragraph:str) -> str:
+	"""Extracts sentence from string, preferably in form of a paragraph (set of sentences), that does not contain newline.
+	Uses UDPipe REST API calls. Docs at: http://lindat.mff.cuni.cz/services/udpipe/api-reference.php"""
+ 
+	rest_params = {'tokenizer': '', 'data': paragraph }
+	request_result = requests.get('http://lindat.mff.cuni.cz/services/udpipe/api/process', params=rest_params)
+
+	# Parse JSON response
+	data = request_result.json()['result'].split('\n')
+	# Assumption about the output format (that if any, the first sentence will be at index 3 in the form "# text = <first sentence>"
+	sent = data[3] if len(data) >= 4 else ''
+
+	sent = sent[9:] # remove the string '# text = ' at the beginning of the data chunk
+	return sent
+
 
 
 
@@ -26,19 +44,14 @@ def perform_extraction(dumpdir:str, outputdir:str, extract_sentences:bool, extra
 	"""Entry point for performing extraction from WikiExtractor HTML intermediary dump"""
 
 
-	# NLTK initialization:
-	# (taken from previous project solution)
-	sent_tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
-	# add in abbreviations:
-	for line in open("abbreviation_added_to_nltk.txt"):
-		sent_tokenizer._params.abbrev_types.add(line.strip())
-	for line in open("czech_abbreviations.txt"):
-		sent_tokenizer._params.abbrev_types.add(line.strip())
-
-
-		sent_tokenizer._params.abbrev_types.add("mgr")
-
-
+	# UDPipe initliazation
+	lang_model = 'lang_models/czech-ud-2.0-170801.udpipe' 
+	model = Model.load(lang_model)
+	if not model:
+		logger.error('Could not load UDPipe language model: ' + lang_model)
+	
+	ud_pipeline = Pipeline(model, 'tokenize', Pipeline.DEFAULT, Pipeline.DEFAULT, '')
+	ud_error = ProcessingError()
 
 
 	if extract_sentences: # overwrite or create files / dirs
@@ -84,8 +97,9 @@ def perform_extraction(dumpdir:str, outputdir:str, extract_sentences:bool, extra
 					# reading separate lines and then str.join() is faster than gradual concatenation)
 					doc_text = "\n".join(doc_lines)
 					# Html text of wiki page (from <doc ...> to </doc>) is in doc_text. Now convert into plain text and extract info
-					page_title, page_uri, page_id, page_first_sentence, page_first_paragraph, page_fulltext, file_uris = extract_page_info(doc_text, sent_tokenizer)  
+					page_title, page_uri, page_id, page_first_sentence, page_first_paragraph, page_fulltext, file_uris = extract_page_info(doc_text, ud_pipeline, ud_error)  
 					
+					# FIXME: Should not be necessary now:
 					# because of the simplistic paragraph and sentence extraction patterns, some special wikipages produce
 					# paragraphs or sentences with a newline - get rid of those for now - replace them with spaces
 					#(probably upgrade to using some third party sentence extractor later):
@@ -141,12 +155,10 @@ def perform_extraction(dumpdir:str, outputdir:str, extract_sentences:bool, extra
 
 
 
-def extract_page_info(doc_text:str, sent_tokenizer) -> (str, str, str, str, str, str, list):
+def extract_page_info(doc_text:str, ud_pipeline, ud_error) -> (str, str, str, str, str, str, list):
 	"""Extract following information from HTML preprocesssed wikipage as tuple with this order:
 		(title, uri, id, first sentence, first paragraph, full text, list of file uris in the wikipage).
-		 This method is called inside perfom_extraction method for each wikipage html it reads from the preprocessed dump.
-		 Uses the argument sent_tokenizer to extract first sentence from a paragraph."""
-
+		 This method is called inside perfom_extraction method for each wikipage html it reads from the preprocessed dump."""
 
 	page_title = ''
 	page_uri = ''
@@ -206,16 +218,17 @@ def extract_page_info(doc_text:str, sent_tokenizer) -> (str, str, str, str, str,
 	split_paragraphs = doc_text.split("\n")
 	page_first_paragraph = split_paragraphs[0] if len(split_paragraphs) >= 1 else ""
 
-	# Old, but kind of working solution to sentence extraction.
-	# re.split returns array with empty string if the paragraph is empty string:
-	# page_first_sentence = re.split(r'\s+(?<=[.?!]\s)(?![a-zěščřžýáíéúůďťň])', page_first_paragraph)[0]
-
-	# Extract first sentence form paragraph using NLTK:
-	tmp_sentences = sent_tokenizer.tokenize(page_first_paragraph)
-	if len(tmp_sentences) > 0 :
-		page_first_sentence = tmp_sentences[0]
-	else: 
-		page_first_sentence = page_first_paragraph
+	# Extract first sentence form paragraph using UDPipe:
+	ud_output = ud_pipeline.process(page_first_paragraph, ud_error)
+	if ud_error.occurred():
+		logger.error('Error occured while extracting sentence using UDPipe: ' + ud_error.message)
+		page_first_sentence = ""
+	else:
+		ud_output = ud_output.split('\n')
+		if len(ud_output) >= 4 :
+			page_first_sentence = ud_output[3][9:] # assumption about the output format 
+		else:
+			page_first_sentence = ""
 
 
 	## 2) For full texts:
