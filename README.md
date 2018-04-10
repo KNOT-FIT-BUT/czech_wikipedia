@@ -11,6 +11,7 @@
 * **cs-wiki-latest-pages-articles_link.xml** - symlink na český wikidump: /mnt/minerva1/nlp/corpora_datasets/monolingual/czech/wikipedia/cswiki-latest-pages-articles.xml.
 * **preprocessed_dump_<DATETIME>**, **results_<DATETIME>** - soubory generované při extrakci dat z dumpu. Adresář *results_<DATETIME>* obsahuje konečné výsledné soubory extrakce.
 * **work** - složka s poznámkami a BASH skripty pro urychlení práce.
+* **abbreviation_added_to_nltk.txt, czech_abbreviations.txt** - soubory se zkratkami, které jsou předány extraktoru vět NLTK.
 ## Postup extrakce dat
 
 1) Spustit **wikiextractor/WikiExtractor.py --templates --filter_disambig_pages <templatefile> -ns Soubor --html --output <outputdir> <wikidumpfile.xml>**, kde:
@@ -34,6 +35,8 @@
 Nejefektivnější je spustit czechwiki_extractor.py se všemi parametry zároveň (-s -p -f --kb). Kvůli zjednodušení skriptu se stejně extrahují všechna data zároveň téměř kompletně, tyto flagy pouze rozhodují o tom, zda se zapíší výsledky do souborů.
 
 Oblasti změn v kódu WikiExtractor.py jsou ohraničené komentáři ### MODIFY_START - ### MODIFY_END.
+
+Extrakce odstavců a vět nefunguje 100 % správně, formáty některých wikičlánků nebo větné konstrukce extraktor nezvládá. Úspěšnost extrakce je odhadem 95 %.
 ## Minulá řešení
 
 Projekty pro extrakci vět, odstavců a celých textů již byly v minulosti řešeny:
