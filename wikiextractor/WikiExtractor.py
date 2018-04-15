@@ -221,6 +221,15 @@ def keepPage(ns, page):
         for line in page:
             if filter_disambig_page_pattern.match(line):
                 return False
+   
+    ### MODIFIED_START
+    filter_unwanted_patter = re.compile("{{Seznam.*?}}")
+    # Other pages that do not make sense:
+    for line in page:
+        if filter_unwanted_patter.match(line):
+            return False
+    ### MODIFIED_ENND
+    
     return True
 
 
