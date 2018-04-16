@@ -216,14 +216,15 @@ filter_disambig_page_pattern = re.compile("{{Rozcestník.*?}}")
 def keepPage(ns, page):
     if ns != '0':               # Aritcle
         return False
+
     # remove disambig pages if desired
-    if options.filter_disambig_pages:
-        for line in page:
-            if filter_disambig_page_pattern.match(line):
-                return False
+#    if options.filter_disambig_pages:
+#       for line in page:
+#           if filter_disambig_page_pattern.match(line):
+#               return False
    
-    ### MODIFIED_START
-    filter_unwanted_patter = re.compile("{{Seznam.*?}}")
+    ### MODIFIED_START - remove Seznamy and Rozcestniky
+    filter_unwanted_patter = re.compile(r'<title>Seznam.*?</title>|{{Seznam.*?}}|{{Rozcestník.*?}}')
     # Other pages that do not make sense:
     for line in page:
         if filter_unwanted_patter.match(line):
@@ -589,12 +590,14 @@ class Extractor(object):
                 out.write('\n')
             out.write(footer)
 
+
+    
     def extract(self, out):
         """
         :param out: a memory file.
         """
-        logging.info('%s\t%s', self.id, self.title)
         
+        logging.info('%s\t%s', self.id, self.title)     
         # Separate header from text with a newline.
         if options.toHTML:
             title_str = '<h1>' + self.title + '</h1>'

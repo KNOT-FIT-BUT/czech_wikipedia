@@ -9,7 +9,7 @@ if [ "$PWD" = "*/work" ] ; then cd .. ; fi
 STARTTIME="`date +%d-%m-%Y--%H:%M`" 
 INPUT="cs-wiki-latest-pages-articles.xml"
 OUTPUTDIR="preprocessed_dump_$STARTTIME"
-TEMPLATES="template_definitions_$STARTTIME"
+TEMPLATES="template_definitions.tmpl"
 
 # Run WikiExtractor.py (see README.md for the options explanation):
-./wikiextractor/WikiExtractor.py --html --filter_disambig_pages --templates "$OUTPUTDIR/$TEMPLATES" --namespaces Soubor --output $OUTPUTDIR $INPUT
+./wikiextractor/WikiExtractor.py --html --filter_disambig_pages --templates "$TEMPLATES" --namespaces Soubor --output $OUTPUTDIR $INPUT
