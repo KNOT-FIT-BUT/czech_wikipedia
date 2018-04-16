@@ -22,7 +22,7 @@ import requests
 from ufal.udpipe import Model, Pipeline, ProcessingError
 
 
-def extract_sentence(paragraph:str) -> str:
+def extract_sentence_nltk(paragraph:str) -> str:
 	"""Extracts sentence from string, preferably in form of a paragraph (set of sentences), that does not contain newline.
 	Uses UDPipe REST API calls. Docs at: http://lindat.mff.cuni.cz/services/udpipe/api-reference.php"""
  
@@ -44,18 +44,6 @@ def perform_extraction(dumpdir:str, outputdir:str, extract_sentences:bool, extra
 	"""Entry point for performing extraction from WikiExtractor HTML intermediary dump"""
 
 
-	# UDPipe initliazation
-	lang_model = 'lang_models/czech-ud-2.0-170801.udpipe' 
-	model = Model.load(lang_model)
-	if not model:
-		logger.error('Could not load UDPipe language model: ' + lang_model)
-	
-	ud_pipeline = Pipeline(model, 'tokenize', Pipeline.DEFAULT, Pipeline.DEFAULT, '')
-	ud_error = ProcessingError()
-
-
-	if extract_sentences: # overwrite or create files / dirs
-		sentences_file = open(os.path.join(outputdir, "sentences.txt"), "w")
 	if extract_paragraphs:
 		paragraphs_file = open(os.path.join(outputdir, "paragraphs.txt"), "w")
 	fulltexts_dir = os.path.join(outputdir, "fulltexts")
@@ -97,19 +85,10 @@ def perform_extraction(dumpdir:str, outputdir:str, extract_sentences:bool, extra
 					# reading separate lines and then str.join() is faster than gradual concatenation)
 					doc_text = "\n".join(doc_lines)
 					# Html text of wiki page (from <doc ...> to </doc>) is in doc_text. Now convert into plain text and extract info
-					page_title, page_uri, page_id, page_first_sentence, page_first_paragraph, page_fulltext, file_uris = extract_page_info(doc_text, ud_pipeline, ud_error)  
-					
-					# FIXME: Should not be necessary now:
-					# because of the simplistic paragraph and sentence extraction patterns, some special wikipages produce
-					# paragraphs or sentences with a newline - get rid of those for now - replace them with spaces
-					#(probably upgrade to using some third party sentence extractor later):
-					page_first_sentence = re.sub(r'\n', r' ', page_first_sentence)
-					page_first_paragraph = re.sub(r'\n', r' ', page_first_paragraph)
+					page_title, page_uri, page_id, page_first_paragraph, page_fulltext, file_uris = extract_page_info(doc_text)  
 					
 					
 					# write data to specific files:
-					if extract_sentences:
-						sentences_file.write(page_uri + '\t' + page_first_sentence + '\n')
 					if extract_paragraphs:
 						paragraphs_file.write(page_uri + '\t' + page_first_paragraph + '\n')
 
@@ -142,8 +121,6 @@ def perform_extraction(dumpdir:str, outputdir:str, extract_sentences:bool, extra
 					continue
 
 	# Close opened files:
-	if extract_sentences:
-		sentences_file.close()
 	if extract_paragraphs:
 		paragraphs_file.close()
 	if generate_knowledgebase:
@@ -152,10 +129,60 @@ def perform_extraction(dumpdir:str, outputdir:str, extract_sentences:bool, extra
 	logger.info("==== Extraction complete : Pages processed: {} ====".format(log_totalpagecount))
 
 
+	# Moved the sentence extraction here: Other things can finish very fast
+	if extract_sentences:
+		logger.info("==== Now performing sentence extraction from paragraphs file ====")
+		# UDPipe initliazation
+		lang_model = 'lang_models/czech-ud-2.0-170801.udpipe' 
+		model = Model.load(lang_model)
+		if not model:
+			logger.error('Could not load UDPipe language model: ' + lang_model)
+		ud_pipeline = Pipeline(model, 'tokenize', Pipeline.DEFAULT, Pipeline.DEFAULT, '')
+		ud_error = ProcessingError()
+
+		sentences_file = open(os.path.join(outputdir, "sentences.txt"), "w")
+		# reopen paragraphs for reading
+		paragraphs_file = open(os.path.join(outputdir, "paragraphs.txt"), "r")
+		
+		sentences_count = 0
+
+		for p_line in paragraphs_file:
+			page_first_sentence = ""
+			page_first_paragraph = p_line.split('\t', 1) # use the variable as temporary list
+
+			# If there is a paragraph content
+			if len(page_first_paragraph) == 2:
+				page_uri = page_first_paragraph[0]
+				page_first_paragraph = page_first_paragraph[1]
+				# Extract first sentence form paragraph using UDPipe:
+				ud_output = ud_pipeline.process(page_first_paragraph, ud_error)
+				if ud_error.occurred():
+					logger.error('Error occured while extracting sentence using UDPipe: ' + ud_error.message)
+					page_first_sentence = ""
+				else:
+					ud_output = ud_output.split('\n')
+					if len(ud_output) >= 4 :
+						page_first_sentence = ud_output[3][9:] # assumption about the output format 
+					else:
+						page_first_sentence = ""
+				
+				# Write sentence to the file
+				sentences_file.write(page_uri + '\t' + page_first_sentence + '\n')
+				
+				sentences_count += 1
+				if sentences_count % 2000 == 0 :
+					logger.info("Extracted {} sentences.".format(sentences_count))
+
+
+		logger.info("Finished extraction of {} sentences.".format(sentences_count))
+
+		paragraphs_file.close()
+		sentences_file.close()
 
 
 
-def extract_page_info(doc_text:str, ud_pipeline, ud_error) -> (str, str, str, str, str, str, list):
+
+def extract_page_info(doc_text:str) -> (str, str, str, str, str, list):
 	"""Extract following information from HTML preprocesssed wikipage as tuple with this order:
 		(title, uri, id, first sentence, first paragraph, full text, list of file uris in the wikipage).
 		 This method is called inside perfom_extraction method for each wikipage html it reads from the preprocessed dump."""
@@ -163,7 +190,6 @@ def extract_page_info(doc_text:str, ud_pipeline, ud_error) -> (str, str, str, st
 	page_title = ''
 	page_uri = ''
 	page_id = ''
-	page_first_sentence = ''
 	page_first_paragraph = ''
 	page_fulltext = ''
 	page_file_uris = []
@@ -200,7 +226,7 @@ def extract_page_info(doc_text:str, ud_pipeline, ud_error) -> (str, str, str, st
 	page_fulltext = doc_text
 
 
-	## 1) For paragraphs, sentences, knowledgebase:
+	## 1) For paragraphs, knowledgebase:
 	
 	# remove all headings
 	doc_text = re.sub(r'<h\d>.*?</h\d>', r'', doc_text) 
@@ -217,18 +243,6 @@ def extract_page_info(doc_text:str, ud_pipeline, ud_error) -> (str, str, str, st
 	# each paragraph seems to be on a separate line)
 	split_paragraphs = doc_text.split("\n")
 	page_first_paragraph = split_paragraphs[0] if len(split_paragraphs) >= 1 else ""
-
-	# Extract first sentence form paragraph using UDPipe:
-	ud_output = ud_pipeline.process(page_first_paragraph, ud_error)
-	if ud_error.occurred():
-		logger.error('Error occured while extracting sentence using UDPipe: ' + ud_error.message)
-		page_first_sentence = ""
-	else:
-		ud_output = ud_output.split('\n')
-		if len(ud_output) >= 4 :
-			page_first_sentence = ud_output[3][9:] # assumption about the output format 
-		else:
-			page_first_sentence = ""
 
 
 	## 2) For full texts:
@@ -262,7 +276,7 @@ def extract_page_info(doc_text:str, ud_pipeline, ud_error) -> (str, str, str, st
 	page_fulltext = page_fulltext.strip()
 
 
-	return (page_title, page_uri, page_id, page_first_sentence, page_first_paragraph, page_fulltext, page_file_uris)
+	return (page_title, page_uri, page_id, page_first_paragraph, page_fulltext, page_file_uris)
 
 
 
