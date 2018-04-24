@@ -39,8 +39,33 @@ def extract_sentence_nltk(paragraph:str) -> str:
 
 
 
+def get_dir_name_fulltexts(title:str) -> str:
+	"""Little helper method. Returns name of a directory in which the article should be put
+	while sorting, based on the title of the article."""
+	
+	t_numeric = "numeric" #title begins with a number
+	t_alphaXX = "alpha_XX" # title has the same two letters at the beginning
+	t_others = "others"
+	t_alnum = "AlNum" # title begins with letter and number
 
-def perform_extraction(dumpdir:str, outputdir:str, extract_sentences:bool, extract_paragraphs:bool, extract_fulltexts:bool, generate_knowledgebase:bool, logger:logging.Logger) -> None:
+	if not title: # empty title
+		return t_others
+	elif title[0].isdigit(): # starts with a digit
+		return t_numeric
+	elif len(title) >= 2: # at least two character title
+		if title[0].isalpha() and title[1].isalpha() and title[0].upper() == title[1].upper():
+			return t_alphaXX
+		elif if title[0].isalpha() and title[1].isalpha() and title[0].upper() != title[1].upper():
+			return title[0].upper() + title[1].upper()
+		elif title[0].isalpha() and title[1].isdigit():
+				return t_alnum
+		else:
+			return t_others
+	else:
+		return t_others
+
+
+def perform_extraction(dumpdir:str, outputdir:str, extract_paragraphs:bool, extract_fulltexts:bool, generate_knowledgebase:bool, logger:logging.Logger) -> None:
 	"""Entry point for performing extraction from WikiExtractor HTML intermediary dump"""
 
 
@@ -60,7 +85,7 @@ def perform_extraction(dumpdir:str, outputdir:str, extract_sentences:bool, extra
 	log_pagechunk = 10000 # display info after processing this many pages
 
 
-	### WARNING!: iterates over overy file in every subdirectory of 'dumdir'! 
+	### WARNING!: iterates over overy file in every subdirectory of 'dumpdir'! 
 	### Make sure no other subdirectories or files are in there
 	for subdir in [os.path.join(dumpdir,node) for node in os.listdir(dumpdir) if os.path.isdir(os.path.join(dumpdir, node))]:
 		for file_path in [os.path.join(subdir, node) for node in os.listdir(subdir) if os.path.isfile(os.path.join(subdir, node))]:
@@ -85,7 +110,7 @@ def perform_extraction(dumpdir:str, outputdir:str, extract_sentences:bool, extra
 					# reading separate lines and then str.join() is faster than gradual concatenation)
 					doc_text = "\n".join(doc_lines)
 					# Html text of wiki page (from <doc ...> to </doc>) is in doc_text. Now convert into plain text and extract info
-					page_title, page_uri, page_id, page_first_paragraph, page_fulltext, file_uris = extract_page_info(doc_text)  
+					page_title, page_uri, page_id, page_first_paragraph, page_fulltext = extract_page_info(doc_text)  
 					
 					
 					# write data to specific files:
@@ -97,7 +122,7 @@ def perform_extraction(dumpdir:str, outputdir:str, extract_sentences:bool, extra
 						# replace '/' in the #title with %2F - its URL escape - because '/' is forbidden in filenames
 						escaped_page_title = re.sub(r'/', r'%2F', page_title) 
 						temp_filename = "wp_" + escaped_page_title # filename: wp_ (as wikipage) + page title
-						temp_dir = os.path.join(fulltexts_dir, "d_" + escaped_page_title[0:2]) # dirname - use first two letters of the page title
+						temp_dir = os.path.join(fulltexts_dir, "d_" + get_dir_name_fulltexts(escaped_page_title)) # dirname - use first two letters of the page title
 						if not os.path.exists(temp_dir):
 							os.makedirs(temp_dir)
 
@@ -106,7 +131,7 @@ def perform_extraction(dumpdir:str, outputdir:str, extract_sentences:bool, extra
 						temp_fulltext_file.close()
 				
 					if generate_knowledgebase:
-						entity_line = "{}\t{}\t{}\t{}\t{}".format(page_title, page_uri, page_id, page_first_paragraph, '|'.join(file_uris))
+						entity_line = "{}\t{}\t{}\t{}".format(page_title, page_uri, page_id, page_first_paragraph)
 						knowledgebase_file.write(entity_line + '\n')
 
 					log_totalpagecount += 1
@@ -182,9 +207,9 @@ def perform_extraction(dumpdir:str, outputdir:str, extract_sentences:bool, extra
 
 
 
-def extract_page_info(doc_text:str) -> (str, str, str, str, str, list):
+def extract_page_info(doc_text:str) -> (str, str, str, str, str):
 	"""Extract following information from HTML preprocesssed wikipage as tuple with this order:
-		(title, uri, id, first sentence, first paragraph, full text, list of file uris in the wikipage).
+		(title, uri, id, first sentence, first paragraph, full text).
 		 This method is called inside perfom_extraction method for each wikipage html it reads from the preprocessed dump."""
 
 	page_title = ''
@@ -192,18 +217,11 @@ def extract_page_info(doc_text:str) -> (str, str, str, str, str, list):
 	page_id = ''
 	page_first_paragraph = ''
 	page_fulltext = ''
-	page_file_uris = []
-
 	
 	doc_text = html.unescape(doc_text)
 	# A little bug-counter - input html contains '&amp;nbsp' instead of '&nbsp', so 
 	# after the first html.unescape() strings '&nbsp' are left in the text (and maybe this goes for more html entities)
 	doc_text = html.unescape(doc_text)
-
-
-	# extract Files (images etc.):
-	page_file_uris = re.findall(r'<a href="Soubor%3A([^"]+)">.*?</a>', doc_text)
-	doc_text = re.sub(r'<a href="Soubor%3A([^"]+)">.*?</a>', r'', doc_text)
 
 
 	# extract title, uri and id:
@@ -217,10 +235,6 @@ def extract_page_info(doc_text:str) -> (str, str, str, str, str, list):
 
 	# replace links with their plain text representation
 	doc_text = re.sub(r'<a href="[^"]+">([^<]+)</a>', r'\1', doc_text)
-
-	# make file uris complete:
-	for i in range(len(page_file_uris)):
-		page_file_uris[i] = "cs.wikipedia.org/wiki/{}#/media/File:{}".format(re.sub(r' ', r'_', page_title), re.sub(r'%20', r'_', page_file_uris[i]))
 
 	# Make copy of the doctext (extraction for fulltext and for sentences, paragraphs, knowledgebase is a little differect)
 	page_fulltext = doc_text
@@ -276,7 +290,7 @@ def extract_page_info(doc_text:str) -> (str, str, str, str, str, list):
 	page_fulltext = page_fulltext.strip()
 
 
-	return (page_title, page_uri, page_id, page_first_paragraph, page_fulltext, page_file_uris)
+	return (page_title, page_uri, page_id, page_first_paragraph, page_fulltext)
 
 
 
@@ -284,7 +298,6 @@ def extract_page_info(doc_text:str) -> (str, str, str, str, str, list):
 options = SimpleNamespace(
 						datadir='', 
 						outputdir='', 
-						extract_sentences=False, 
 						extract_paragraphs=False, 
 						extract_fulltexts=False,
 						generate_knowledgebase=False,
@@ -300,25 +313,16 @@ def main(argList:list = None) -> None:
 	or can be executed in another script, in which case the script
 	can pass custom, modified list of arguments"""
 
-	argParser = argparse.ArgumentParser(description="""Script for extracting first sentences, first paragraphs, full texts or 
-													generating knowledgebase for wikipages from predump by WikiExtractor.py.""",
-										epilog="""Using all extract options (-s, -p, -f, --kb) at once 
-												is the most efficient way to extract the data, because once read, all the data are processed anyway.
-												These flags just decide whether the data are written to the result files.""")
+	argParser = argparse.ArgumentParser(description="""Script for extracting full article texts, first paragraphs of the texts
+																	or generating a meta-knowledge base from a predump generated by by WikiExtractor.py.""")
 
 	argParser.add_argument('-d', '--datadir', help="""Path to the directory where WikiExtractor.py preprocessed the data from wikidump 
-									(the directory that contains directories 'AA', 'AB', 'AC' ...).""",
-									required=True)
-	argParser.add_argument('-o', '--outputdir', help="""Path to a directory where this extractor puts its results 
-										(see options '-s', '-p' and '-f').""",
-										required=True)
-	argParser.add_argument('-s', help="""Extract first sentences into 'outputdir/sentences.txt'.""", action="store_true")
+									(the directory that contains directories 'AA', 'AB', 'AC' ...).""",required=True)
+	argParser.add_argument('-o', '--outputdir', help="""Path to a directory where this extractor puts its results.""", required=True)
 	argParser.add_argument('-p', help="""Extract first paragraps into 'outputdir/paragraphs.txt'""", action="store_true")
-	argParser.add_argument('-f', help="""Extract full text of each wikipage into separate files 'outputdir/fulltexts/<pagetitle>.txt'.""", action="store_true")
+	argParser.add_argument('-f', help="""Extract full text of each wikipage into separate files to directory 'outputdir/fulltexts.""", action="store_true")
 		
-	argParser.add_argument('--kb', help="""Generate knowledgebase of each wikipage into file 'outputdir/knowledgebase.txt'. 
-										Each line for one page formatted as: 'Title URI pageID firstParagraph listOfFiles', 
-										each entity separated by tabulators, files separated by pipes ('|').""", action="store_true")
+	argParser.add_argument('--kb', help="""Generate meta-knowledgebase of each wikipage into file 'outputdir/knowledgebase.txt'.""", action="store_true")
 	argParser.add_argument('-l', '--logfile', help="""Write script info messages and error into logfile (by default written only to stderr).""")
 	
 
@@ -332,7 +336,6 @@ def main(argList:list = None) -> None:
 ### Transfer 'args' into the 'options' object, just for readability
 	options.datadir = args.datadir
 	options.outputdir = args.outputdir
-	options.extract_sentences = args.s
 	options.extract_paragraphs =  args.p
 	options.extract_fulltexts = args.f
 	options.generate_knowledgebase = args.kb
@@ -373,8 +376,8 @@ def main(argList:list = None) -> None:
 			logger.error("Cannot create output directory {}.\n".format(options.outputdir))
 			optionsValid = False
 	
-	if not (options.extract_sentences or options.extract_paragraphs or options.extract_fulltexts or options.generate_knowledgebase):
-		logger.error("You haven't specified any of the extraction options (-s, -p, -f, --kb). What am i supposed to do?\n")
+	if not (options.extract_paragraphs or options.extract_fulltexts or options.generate_knowledgebase):
+		logger.error("You haven't specified any of the extraction options (-p, -f, --kb). What am i supposed to do?\n")
 		optionsValid = False
 
 	if options.extract_fulltexts and not os.path.exists(os.path.join(options.outputdir, "fulltexts")):
@@ -391,7 +394,6 @@ def main(argList:list = None) -> None:
 	else: # Perform extraction
 		perform_extraction(options.datadir, 
 				options.outputdir, 
-				options.extract_sentences, 
 				options.extract_paragraphs, 
 				options.extract_fulltexts,
 				options.generate_knowledgebase,
