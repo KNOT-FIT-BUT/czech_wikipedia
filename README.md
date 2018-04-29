@@ -14,24 +14,24 @@
 * **results** - konečné výsledky extrakce
 ## Postup extrakce dat
 
-1) Spustit **wikiextractor/WikiExtractor.py --templates --filter_disambig_pages <templatefile> --html --output <outputdir> <wikidumpfile.xml>**, kde:
-* <templatefile> - soubor, kde si WikiExtractor extrahuje definici Wikišablon. Pokud neexistuje, je automaticky vytvořen a skript do něj extrahuje šablony. Pokud již existuje (a obsahuje šablony), je použit k urychlení předzpracování dumpu. Každopádně je nutné parametr "--templates" uvést, aby ve výstupu byly expandované Wikišablony.
+1) Spustit **wikiextractor/WikiExtractor.py --templates --filter_disambig_pages _templatefile_ --html --output _outputdir_ _wikidumpfile.xml_**, kde:
+* _templatefile_ - soubor, kde si WikiExtractor extrahuje definici Wikišablon. Pokud neexistuje, je automaticky vytvořen a skript do něj extrahuje šablony. Pokud již existuje (a obsahuje šablony), je použit k urychlení předzpracování dumpu. Každopádně je nutné parametr "--templates" uvést, aby ve výstupu byly expandované Wikišablony.
 * --html - czechwiki_extractor.py očekává HTML vstup
-* <outputdir> - složka, kam se předzpracovaný výstup ukládá. Zde budou složky s názvy "AA", "AB", "AC" atd. Tuto složku je třeba uvést jako parametr "--datadir <preprocessed_dump_dir>" při spuštění czechwiki_extractor.py
-* <wikidumpfile.xml> - vlastní wiki dump
+* _outputdir_ - složka, kam se předzpracovaný výstup ukládá. Zde budou složky s názvy "AA", "AB", "AC" atd. Tuto složku je třeba uvést jako parametr "--datadir <preprocessed_dump_dir>" při spuštění czechwiki_extractor.py
+* _wikidumpfile.xml_ - vlastní wiki dump
 
-2) Spustit **czechwiki_extractor.py --datadir <preprocessed_dump_dir> --outputdir <outputdir> [--logfile <logfile>]**, kde:
-* <dumpdir> - složka obsahující předzpracované soubory od WikiExtractor.py (viz krok 1).
-* <outputdir> - kam má czechwiki_extractor ukládat výsledné soubory/složky.
-* --logfile <logfile> - pokud chcete logovat zprávy do souboru (bez --logfile se vypisují pouze na STDERR). Logfile přepínač funguje u následujících skriptů totožně.
+2) Spustit **czechwiki_extractor.py --datadir _preprocessed_dump_dir_ --outputdir _outputdir_ [--logfile _logfile_]**, kde:
+* _dumpdir_ - složka obsahující předzpracované soubory od WikiExtractor.py (viz krok 1).
+* _outputdir_ - kam má czechwiki_extractor ukládat výsledné soubory/složky.
+* --logfile _logfile_ - pokud chcete logovat zprávy do souboru (bez --logfile se vypisují pouze na STDERR). Logfile přepínač funguje u následujících skriptů totožně.
 
 3) Spustit (můžou běžet paralelně):
-a) **extract_sentences.py -i <paragraphs_file> -o <sentences_file> [-l <logfile>]**
-b) **get_images_for_knowledgebase.py -i <incomlete_knowledgebase> -o <knowledgebase> [-l <logfile>]**, kde:
-* <paragraphs_file> - textový soubor s extrahovanými paragrafy - results/paragraphs.txt
-* <sentences_file> - výsledný soubor s větami, typicky results/sentences.txt
-* <incomlete_knowledgebase> - soubor s nekompletní KB generovaný czechwiki_extractor.py - typicky results/incomplete-kb.txt
-* <knowledgebase> - výsledná KB s url obrázků, typicky results/knowledgebase.txt
+a) **extract_sentences.py -i _paragraphs_file_ -o _sentences_file_ [-l _logfile_]**
+b) **get_images_for_knowledgebase.py -i _incomlete_knowledgebase_ -o _knowledgebase_ [-l _logfile_]**, kde:
+* _paragraphs_file_ - textový soubor s extrahovanými paragrafy - results/paragraphs.txt
+* _sentences_file_ - výsledný soubor s větami, typicky results/sentences.txt
+* _incomlete_knowledgebase_ - soubor s nekompletní KB generovaný czechwiki_extractor.py - typicky results/incomplete-kb.txt
+* _knowledgebase_ - výsledná KB s url obrázků, typicky results/knowledgebase.txt
 	
 	
 ## Poznámky
