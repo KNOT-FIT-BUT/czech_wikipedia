@@ -4,8 +4,9 @@
 ###
 ### Script for extracting sentences, paragraphs and full texts or generating knowledgebase 
 ### from intermediary dump created usign WikiExtractor.py https://github.com/attardi/wikiextractor.
-### Usage:
+### USAGE: czechwiki_extractor.py -d preprocessed_dump_dir -o results 
 ### See README.md for instructions on extraction
+###
 #########################################################################################################################################
 
 
@@ -15,27 +16,12 @@ import re
 import os.path
 import html
 import logging
+import time
 
 from types import SimpleNamespace
 
 import requests
 from ufal.udpipe import Model, Pipeline, ProcessingError
-
-
-def extract_sentence_nltk(paragraph:str) -> str:
-	"""Extracts sentence from string, preferably in form of a paragraph (set of sentences), that does not contain newline.
-	Uses UDPipe REST API calls. Docs at: http://lindat.mff.cuni.cz/services/udpipe/api-reference.php"""
- 
-	rest_params = {'tokenizer': '', 'data': paragraph }
-	request_result = requests.get('http://lindat.mff.cuni.cz/services/udpipe/api/process', params=rest_params)
-
-	# Parse JSON response
-	data = request_result.json()['result'].split('\n')
-	# Assumption about the output format (that if any, the first sentence will be at index 3 in the form "# text = <first sentence>"
-	sent = data[3] if len(data) >= 4 else ''
-
-	sent = sent[9:] # remove the string '# text = ' at the beginning of the data chunk
-	return sent
 
 
 
@@ -55,7 +41,7 @@ def get_dir_name_fulltexts(title:str) -> str:
 	elif len(title) >= 2: # at least two character title
 		if title[0].isalpha() and title[1].isalpha() and title[0].upper() == title[1].upper():
 			return t_alphaXX
-		elif if title[0].isalpha() and title[1].isalpha() and title[0].upper() != title[1].upper():
+		elif title[0].isalpha() and title[1].isalpha() and title[0].upper() != title[1].upper():
 			return title[0].upper() + title[1].upper()
 		elif title[0].isalpha() and title[1].isdigit():
 				return t_alnum
@@ -65,17 +51,20 @@ def get_dir_name_fulltexts(title:str) -> str:
 		return t_others
 
 
-def perform_extraction(dumpdir:str, outputdir:str, extract_paragraphs:bool, extract_fulltexts:bool, generate_knowledgebase:bool, logger:logging.Logger) -> None:
+def perform_extraction(dumpdir:str, outputdir:str, logger:logging.Logger) -> None:
 	"""Entry point for performing extraction from WikiExtractor HTML intermediary dump"""
 
+	paragraphs_file_name = "paragraphs.txt"
+	fulltexts_dir_name = "fulltexts"
+	knowledgebase_file_name = "incomlete-kb.txt" # incomplete kb
+	kb_file_name = "knowledgebase.txt" # complete
 
-	if extract_paragraphs:
-		paragraphs_file = open(os.path.join(outputdir, "paragraphs.txt"), "w")
-	fulltexts_dir = os.path.join(outputdir, "fulltexts")
-	if extract_fulltexts and not os.path.exists(fulltexts_dir):
+
+	paragraphs_file = open(os.path.join(outputdir, paragraphs_file_name), "w")
+	fulltexts_dir = os.path.join(outputdir, fulltexts_dir_name)
+	if not os.path.exists(fulltexts_dir):
 		os.makedirs(fulltexts_dir)
-	if generate_knowledgebase:
-		knowledgebase_file = open(os.path.join(outputdir, "knowledgebase.txt"), "w")
+	knowledgebase_file = open(os.path.join(outputdir, knowledgebase_file_name), "w")
 
 
 	logger.info("==== Performing extraction ====")
@@ -114,25 +103,22 @@ def perform_extraction(dumpdir:str, outputdir:str, extract_paragraphs:bool, extr
 					
 					
 					# write data to specific files:
-					if extract_paragraphs:
-						paragraphs_file.write(page_uri + '\t' + page_first_paragraph + '\n')
+					paragraphs_file.write(page_uri + '\t' + page_first_paragraph + '\n')
 
 					
-					if extract_fulltexts: 
-						# replace '/' in the #title with %2F - its URL escape - because '/' is forbidden in filenames
-						escaped_page_title = re.sub(r'/', r'%2F', page_title) 
-						temp_filename = "wp_" + escaped_page_title # filename: wp_ (as wikipage) + page title
-						temp_dir = os.path.join(fulltexts_dir, "d_" + get_dir_name_fulltexts(escaped_page_title)) # dirname - use first two letters of the page title
-						if not os.path.exists(temp_dir):
-							os.makedirs(temp_dir)
+					# replace '/' in the #title with %2F - its URL escape - because '/' is forbidden in filenames
+					escaped_page_title = re.sub(r'/', r'%2F', page_title) 
+					temp_filename = "wp_" + escaped_page_title # filename: wp_ (as wikipage) + page title
+					temp_dir = os.path.join(fulltexts_dir, "d_" + get_dir_name_fulltexts(escaped_page_title)) # dirname - use first two letters of the page title
+					if not os.path.exists(temp_dir):
+						os.makedirs(temp_dir)
 
-						temp_fulltext_file = open(os.path.join(temp_dir, temp_filename + '.txt'), "w")
-						temp_fulltext_file.write(page_fulltext) 
-						temp_fulltext_file.close()
+					temp_fulltext_file = open(os.path.join(temp_dir, temp_filename + '.txt'), "w")
+					temp_fulltext_file.write(page_fulltext) 
+					temp_fulltext_file.close()
 				
-					if generate_knowledgebase:
-						entity_line = "{}\t{}\t{}\t{}".format(page_title, page_uri, page_id, page_first_paragraph)
-						knowledgebase_file.write(entity_line + '\n')
+					entity_line = "{}\t{}\t{}\t{}".format(page_id, page_uri, page_title, page_first_paragraph)
+					knowledgebase_file.write(entity_line + '\n')
 
 					log_totalpagecount += 1
 					# logging
@@ -146,64 +132,10 @@ def perform_extraction(dumpdir:str, outputdir:str, extract_paragraphs:bool, extr
 					continue
 
 	# Close opened files:
-	if extract_paragraphs:
-		paragraphs_file.close()
-	if generate_knowledgebase:
-		knowledgebase_file.close()
+	paragraphs_file.close()
+	knowledgebase_file.close()
 
 	logger.info("==== Extraction complete : Pages processed: {} ====".format(log_totalpagecount))
-
-
-	# Moved the sentence extraction here: Other things can finish very fast
-	if extract_sentences:
-		logger.info("==== Now performing sentence extraction from paragraphs file ====")
-		# UDPipe initliazation
-		lang_model = 'lang_models/czech-ud-2.0-170801.udpipe' 
-		model = Model.load(lang_model)
-		if not model:
-			logger.error('Could not load UDPipe language model: ' + lang_model)
-		ud_pipeline = Pipeline(model, 'tokenize', Pipeline.DEFAULT, Pipeline.DEFAULT, '')
-		ud_error = ProcessingError()
-
-		sentences_file = open(os.path.join(outputdir, "sentences.txt"), "w")
-		# reopen paragraphs for reading
-		paragraphs_file = open(os.path.join(outputdir, "paragraphs.txt"), "r")
-		
-		sentences_count = 0
-
-		for p_line in paragraphs_file:
-			page_first_sentence = ""
-			page_first_paragraph = p_line.split('\t', 1) # use the variable as temporary list
-
-			# If there is a paragraph content
-			if len(page_first_paragraph) == 2:
-				page_uri = page_first_paragraph[0]
-				page_first_paragraph = page_first_paragraph[1]
-				# Extract first sentence form paragraph using UDPipe:
-				ud_output = ud_pipeline.process(page_first_paragraph, ud_error)
-				if ud_error.occurred():
-					logger.error('Error occured while extracting sentence using UDPipe: ' + ud_error.message)
-					page_first_sentence = ""
-				else:
-					ud_output = ud_output.split('\n')
-					if len(ud_output) >= 4 :
-						page_first_sentence = ud_output[3][9:] # assumption about the output format 
-					else:
-						page_first_sentence = ""
-				
-				# Write sentence to the file
-				sentences_file.write(page_uri + '\t' + page_first_sentence + '\n')
-				
-				sentences_count += 1
-				if sentences_count % 2000 == 0 :
-					logger.info("Extracted {} sentences.".format(sentences_count))
-
-
-		logger.info("Finished extraction of {} sentences.".format(sentences_count))
-
-		paragraphs_file.close()
-		sentences_file.close()
-
 
 
 
@@ -298,9 +230,6 @@ def extract_page_info(doc_text:str) -> (str, str, str, str, str):
 options = SimpleNamespace(
 						datadir='', 
 						outputdir='', 
-						extract_paragraphs=False, 
-						extract_fulltexts=False,
-						generate_knowledgebase=False,
 						logfile=''
 		)
 
@@ -319,10 +248,6 @@ def main(argList:list = None) -> None:
 	argParser.add_argument('-d', '--datadir', help="""Path to the directory where WikiExtractor.py preprocessed the data from wikidump 
 									(the directory that contains directories 'AA', 'AB', 'AC' ...).""",required=True)
 	argParser.add_argument('-o', '--outputdir', help="""Path to a directory where this extractor puts its results.""", required=True)
-	argParser.add_argument('-p', help="""Extract first paragraps into 'outputdir/paragraphs.txt'""", action="store_true")
-	argParser.add_argument('-f', help="""Extract full text of each wikipage into separate files to directory 'outputdir/fulltexts.""", action="store_true")
-		
-	argParser.add_argument('--kb', help="""Generate meta-knowledgebase of each wikipage into file 'outputdir/knowledgebase.txt'.""", action="store_true")
 	argParser.add_argument('-l', '--logfile', help="""Write script info messages and error into logfile (by default written only to stderr).""")
 	
 
@@ -336,9 +261,6 @@ def main(argList:list = None) -> None:
 ### Transfer 'args' into the 'options' object, just for readability
 	options.datadir = args.datadir
 	options.outputdir = args.outputdir
-	options.extract_paragraphs =  args.p
-	options.extract_fulltexts = args.f
-	options.generate_knowledgebase = args.kb
 	options.logfile = args.logfile
 
 	# Setup module LOGGER
@@ -375,12 +297,8 @@ def main(argList:list = None) -> None:
 		except:
 			logger.error("Cannot create output directory {}.\n".format(options.outputdir))
 			optionsValid = False
-	
-	if not (options.extract_paragraphs or options.extract_fulltexts or options.generate_knowledgebase):
-		logger.error("You haven't specified any of the extraction options (-p, -f, --kb). What am i supposed to do?\n")
-		optionsValid = False
 
-	if options.extract_fulltexts and not os.path.exists(os.path.join(options.outputdir, "fulltexts")):
+	if not os.path.exists(os.path.join(options.outputdir, "fulltexts")):
 		try:
 			os.makedirs(os.path.join(options.outputdir, "fulltexts"))
 		except:
@@ -392,12 +310,7 @@ def main(argList:list = None) -> None:
 		logger.error("==== Script terminating with exit status [1] ====")
 		sys.exit(1)
 	else: # Perform extraction
-		perform_extraction(options.datadir, 
-				options.outputdir, 
-				options.extract_paragraphs, 
-				options.extract_fulltexts,
-				options.generate_knowledgebase,
-				logger)
+		perform_extraction(options.datadir, options.outputdir, logger)
 
 	logger.info("==== Scrip succesfully finished with exit status [0] ====")
 	sys.exit()

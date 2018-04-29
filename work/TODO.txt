@@ -4,25 +4,19 @@
 
 # DONE --> perform preprocessing (wikiextractor) with disambiguations removed
 # DONE --> Use UDPipe REST API
-
---> Use local lib or exe UDPipe (REST API is ridiculously slow)
-
---> Remove articles "Seznamy *" (recognized by "[[Kategorie:Seznamy *]" at the end in wikidump)
+# DONE --> Use local lib or exe UDPipe (REST API is ridiculously slow)
+# DONE --> Remove articles "Seznamy *" (recognized by "[[Kategorie:Seznamy *]" at the end in wikidump)
 
 
+--> Modify run-*.sh scripts - currently are invalid
+--> Download html of wikipages and extract image paths from urls - to complete knowledgebase
+--> sort knowledgebase by the page ID
 
-
-
-- WikiExtractor removes Disambiguations (now fixed) and REDIRECTS
-- Math formulas expand into strings 'formula_XX' - ???
-- ? remove: Odkazy, Literatura, Externi odkazy, Souvisejici clanky, ...
-- ? remove empty sections
 
 
 ===> MEDIUM PRIORITY (completeness):
 
 # DONE > spread fulltext fiiles into directories
-
 # DONE > some titles begin with period or other dumb chars. This renders them hidden on Linux. Do some replacing in file naming in fulltexts/ directory
 
 
@@ -31,4 +25,13 @@
 > implement benchmark
 > tweak logging and output of WikiExtractor.py
 > add verbosity option
+
+
+
+===> NOTES
+
+- WikiExtractor removes Disambiguations (now fixed) and REDIRECTS
+- Math formulas expand into strings 'formula_XX' - ???
+- ? remove: Odkazy, Literatura, Externi odkazy, Souvisejici clanky, ...
+- ? remove empty sections
 

@@ -12,4 +12,4 @@ OUTPUTDIR="results_$STARTTIME"
 LOGFILE="czechwiki_extractor.log"
 
 # Run czechwiki_extractor.py (see README.md for the option explanation)
-./czechwiki_extractor.py --datadir $INPUTDIR --output $OUTPUTDIR -s -p -f --kb --logfile $LOGFILE
+./czechwiki_extractor.py --datadir $INPUTDIR --output $OUTPUTDIR

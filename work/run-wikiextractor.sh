@@ -12,4 +12,4 @@ OUTPUTDIR="preprocessed_dump_$STARTTIME"
 TEMPLATES="template_definitions.tmpl"
 
 # Run WikiExtractor.py (see README.md for the options explanation):
-./wikiextractor/WikiExtractor.py --html --filter_disambig_pages --templates "$TEMPLATES" --namespaces Soubor --output $OUTPUTDIR $INPUT
+./wikiextractor/WikiExtractor.py --html --filter_disambig_pages --templates "$TEMPLATES" --output $OUTPUTDIR $INPUT
