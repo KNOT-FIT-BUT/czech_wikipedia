@@ -1,3 +1,0 @@
-<br> -- replace with newline
-<ul>,<ol>, <li> -- reformated into bulleted lists with "* "
-<dl>, <dt>, <dd> -- description lists, also bulleted with "* ", descriptions with string " '-> "

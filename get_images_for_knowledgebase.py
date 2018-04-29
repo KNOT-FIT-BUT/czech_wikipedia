@@ -38,7 +38,7 @@ def complete_knowledgebase(input_file:str, output_file:str, logger) -> None:
 		try:
 			reqResult = requests.get(url,timeout=10)
 			imgList = re.findall(r'<img.*?src="//upload\.wikimedia\.org/(.*?)".*?>', reqResult.text)
-			kb_line = kb_line + '\t' + '\t'.join(imgList)
+			kb_line = kb_line + '\t' + '\t'.join(set(imgList)) # remove duplicities by converting to set
 		except:
 			logger.error("requests.get() failed to retrieve page at {}. Continuing with next url.".format(url))
 
