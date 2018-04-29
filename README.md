@@ -10,8 +10,8 @@
 * **czechwiki_extractor.py** - skript, který provede druhou fázi extrakce a připraví data pro skripty get_images_for_knowledgebase.py a extract_sentences.py.
 * **cs-wiki-latest-pages-articles_link.xml** - symlink na český wikidump: /mnt/minerva1/nlp/corpora_datasets/monolingual/czech/wikipedia/cswiki-latest-pages-articles.xml.
 * **lang_models, ufal, pystrings.swg, ufal_udpipe.so** - složky a soubory potřebné pro fungování UDPipe API, které používá skript extract_sentences.py.
-* **preprocessed_dump* ** - složka vygenerovaná skriptem WikiExtractor.py (viz 1. krok extrakce)
-* **results* ** - konečné výsledky extrakce
+* **preprocessed_dump** - složka vygenerovaná skriptem WikiExtractor.py (viz 1. krok extrakce)
+* **results** - konečné výsledky extrakce
 ## Postup extrakce dat
 
 1) Spustit **wikiextractor/WikiExtractor.py --templates --filter_disambig_pages <templatefile> --html --output <outputdir> <wikidumpfile.xml>**, kde:
