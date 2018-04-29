@@ -16,7 +16,6 @@
 
 1) Spustit **wikiextractor/WikiExtractor.py --templates --filter_disambig_pages _templatefile_ --html --output _outputdir_ _wikidumpfile.xml_**, kde:
 * _templatefile_ - soubor, kde si WikiExtractor extrahuje definici Wikišablon. Pokud neexistuje, je automaticky vytvořen a skript do něj extrahuje šablony. Pokud již existuje (a obsahuje šablony), je použit k urychlení předzpracování dumpu. Každopádně je nutné parametr "--templates" uvést, aby ve výstupu byly expandované Wikišablony.
-* --html - czechwiki_extractor.py očekává HTML vstup
 * _outputdir_ - složka, kam se předzpracovaný výstup ukládá. Zde budou složky s názvy "AA", "AB", "AC" atd. Tuto složku je třeba uvést jako parametr "--datadir <preprocessed_dump_dir>" při spuštění czechwiki_extractor.py
 * _wikidumpfile.xml_ - vlastní wiki dump
 
@@ -62,11 +61,3 @@ Soubory:
 
 ### Testování 
 Testování proběhlo na serveru athena1.
-Skript WikiExtractor.py byl spuštěn následovně:
-   **wikiextractor/WikiExtractor.py --templates template_defs.tmpl -ns Soubor --html --output preprocessed_dump cs-wiki-latest-pages-articles_link.xml**
-   Program běžel 18 525 sekund (~ 5 hodin 8 minut), z toho extrakce šablon zabrala cca 3 minuty.
-
-   Skript czechwiki_extractor.py byl spuštěn následovně:
-       **czechwiki_extractor.py --datadir preprocessed_dump --outputdir results -s -p -f --kb**
-	   Program běžel 233 sekund (necelé 4 minuty). Zpracoval celkem 398 287 článků wikipedie.
-
