@@ -34,11 +34,11 @@ def complete_knowledgebase(input_file:str, output_file:str, logger) -> None:
 	for line in incomplete_knowledgebase_file:
 		time.sleep(1) # delay between requests, so we dont overload wikipedia servers
 		url = line.split('\t')[1]
-		kb_line = line
+		kb_line = line[:-1]
 		try:
 			reqResult = requests.get(url,timeout=10)
 			imgList = re.findall(r'<img.*?src="//upload\.wikimedia\.org/(.*?)".*?>', reqResult.text)
-			kb_line = kb_line + '\t'.join(imgList)
+			kb_line = kb_line + '\t' + '\t'.join(imgList)
 		except:
 			logger.error("requests.get() failed to retrieve page at {}. Continuing with next url.".format(url))
 
@@ -88,7 +88,7 @@ def main(argList:list = None) -> None:
 
 	# write also to logfile if the argument was passed:
 	if args.logfile:
-		logfileHandler = logging.FileHandler(options.logfile)
+		logfileHandler = logging.FileHandler(args.logfile)
 		logfileHandler.setFormatter(logging.Formatter('[%(asctime)s]-[%(name)s]-[%(levelname)s]: %(message)s'))
 		logger.addHandler(logfileHandler)
 
