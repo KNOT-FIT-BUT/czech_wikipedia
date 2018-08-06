@@ -42,6 +42,7 @@ def complete_knowledgebase(input_file:str, output_file:str, logger) -> None:
 			kb_line = kb_line + '\t' + '|'.join(set(imgList)) + '\n' # remove duplicities by converting to set
 		except:
 			logger.error("requests.get() failed to retrieve page at {}. Continuing with next url.".format(url))
+			kb_line = kb_line + '\t' + '\n'
 
 		kb_file.write(kb_line) # append the image urls to the knowledgebase and write the complete line to the kb
 
