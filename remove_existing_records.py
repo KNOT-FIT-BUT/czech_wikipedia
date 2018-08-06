@@ -35,7 +35,10 @@ def remove_existing_records(kbhead_wikiurl_map, kb_existing_path_param, kb_czech
 	kb_czech_lines = []
 
 	for line in kb_existing:
-		kb_existing_urls.add(line.split('\t')[-1].strip())
+		line_columns = line.split('\t')
+		protocol_url = line_columns[kbhead_wikiurl_map[line_columns[0]]].strip().split(':', 1) # normalize URL to format without http(s) => //cs.wikipedia.org/...
+		if len(protocol_url) == 2:
+			kb_existing_urls.add(protocol_url[1])
 	
 	for line in kb_czech:
 		kb_czech_lines.append(line)
@@ -44,7 +47,12 @@ def remove_existing_records(kbhead_wikiurl_map, kb_existing_path_param, kb_czech
 	removed = 0
 	last = 0
 	while i < len(kb_czech_lines):
-		url = kb_czech_lines[i].split('\t')[1].strip()
+		protocol_url = kb_czech_lines[i].split('\t')[1].strip().split(':', 1) # normalize URL to format without http(s) => //cs.wikipedia.org/...
+
+		if len(protocol_url) != 2:
+			continue
+
+		url = protocol_url[1]
 
 		if url in kb_existing_urls:
 			del kb_czech_lines[i]
