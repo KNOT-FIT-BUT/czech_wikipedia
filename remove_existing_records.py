@@ -18,12 +18,13 @@ import logging
 
 
 # paths - parameters
-kb_existing_path = "/mnt/data/nlp/projects/entity_kb_czech3/xplani02/kb_cs" 
+kbhead_existing_path = "/mnt/minerva1/nlp/projects/entity_kb_czech3/xplani02/HEAD-KB"
+kb_existing_path = "/mnt/data/nlp/projects/entity_kb_czech3/xplani02/kb_cs"
 kb_czech_path = "/mnt/minerva1/nlp/projects/czech_wikipedia/results_final/kb_final.txt"
 kb_result_path = "/mnt/minerva1/nlp/projects/czech_wikipedia/results_final/kb_final_filtered.txt"
 
 
-def remove_existing_records(kb_existing_path_param, kb_czech_path_param, logger):
+def remove_existing_records(kbhead_wikiurl_map, kb_existing_path_param, kb_czech_path_param, logger):
 	"""Removes records that are already present in -kb_existing- from -kb_czech'. """
 
 	kb_existing = open(kb_existing_path_param, "r")
@@ -91,7 +92,15 @@ def main():
 		logger.error("==== Script terminating with exit status [1] ====")
 		sys.exit(1)
 	else:
-		remove_existing_records(kb_existing_path, kb_czech_path, logger)
+		kbhead_existing = open(kbhead_existing_path, "r")
+		kbhead_wikiurl_map = {}
+		for line in kbhead_existing:
+			line_columns = line.split("\t")
+			for i, column in enumerate(line_columns):
+				if re.match(r"(\{[^\}]*\})?WIKI_URL", column):
+					kbhead_wikiurl_map[line_columns[0][1:-1]] = i
+					break
+		remove_existing_records(kbhead_wikiurl_map, kb_existing_path, kb_czech_path, logger)
 
 	logger.info("==== Scrip succesfully finished with exit status [0] ====")
 	sys.exit()
