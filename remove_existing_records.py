@@ -15,6 +15,7 @@ import sys
 import re
 import os.path
 import logging
+import urllib.parse
 
 
 # paths - parameters
@@ -53,8 +54,10 @@ def remove_existing_records(kbhead_wikiurl_map, kb_existing_path_param, kb_czech
 			continue
 
 		url = protocol_url[1]
+		url_nonescaped = urllib.parse.unquote(url)
+		url_escaped = urllib.parse.quote(url_nonescaped, safe=':')
 
-		if url in kb_existing_urls:
+		if url in kb_existing_urls or url_nonescaped in kb_existing_urls or url_escaped in kb_existing_urls:
 			del kb_czech_lines[i]
 			removed += 1
 			i = i-1 
