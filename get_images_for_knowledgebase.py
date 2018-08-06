@@ -38,6 +38,7 @@ def complete_knowledgebase(input_file:str, output_file:str, logger) -> None:
 		try:
 			reqResult = requests.get(url,timeout=10)
 			imgList = re.findall(r'<img.*?src="//upload\.wikimedia\.org/(.*?)".*?>', reqResult.text)
+			imgList = map(lambda x: re.sub(r'^wikipedia/', 'wikimedia/', x), imgList) # change to local repository schema
 			imgList = map(lambda x: re.sub(r'\|', '\|', x), imgList) # not a same - pattern is escaped, replacement is plain text
 			kb_line = kb_line + '\t' + '|'.join(set(imgList)) + '\n' # remove duplicities by converting to set
 		except:
