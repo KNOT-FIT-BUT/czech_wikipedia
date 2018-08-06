@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
  
 #########################################################################################################################################
 ###
@@ -100,8 +101,10 @@ def perform_extraction(dumpdir:str, outputdir:str, logger:logging.Logger) -> Non
 					doc_text = "\n".join(doc_lines)
 					# Html text of wiki page (from <doc ...> to </doc>) is in doc_text. Now convert into plain text and extract info
 					page_title, page_uri, page_id, page_first_paragraph, page_fulltext = extract_page_info(doc_text)  
-					
-					
+
+					if ' (rozcestník)' in page_title or page_title.lower() == 'hlavní strana':
+						continue
+
 					# write data to specific files:
 					paragraphs_file.write(page_uri + '\t' + page_first_paragraph + '\n')
 
