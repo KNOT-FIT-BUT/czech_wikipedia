@@ -105,6 +105,8 @@ def perform_extraction(dumpdir:str, outputdir:str, logger:logging.Logger) -> Non
 					if ' (rozcestník)' in page_title or page_title.lower() == 'hlavní strana':
 						continue
 
+					page_title = re.sub(r' \([^\)]*\)$', '', page_title)
+
 					# write data to specific files:
 					paragraphs_file.write(page_uri + '\t' + page_first_paragraph + '\n')
 
